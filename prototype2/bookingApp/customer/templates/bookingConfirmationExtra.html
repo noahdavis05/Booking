@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Confirm Booking</h2>
+  <p>Booking for: {{ subfacility_id }}</p>
+  <p>Date: {{ selected_date }}</p>
+  <p>Time: {{ selected_time }}</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <h3>Select Additional Slots</h3>
+    <input type="hidden" id="original_selected_time" value="{{ selected_time }}">
+    {% for slot_time in slot_times %}
+      <div>
+        <input type="checkbox" name="additional_slots" value="{{ slot_time }}" id="slot_{{ forloop.counter }}">
+        <label for="slot_{{ forloop.counter }}">{{ slot_time }}</label>
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+  </form>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var originalTime = document.getElementById("original_selected_time").value;
+      var checkboxes = document.querySelectorAll("input[type=checkbox][name=additional_slots]");
+      checkboxes.forEach(function(checkbox) {
+        if (checkbox.value === originalTime) {
+          checkbox.checked = true;
+          checkbox.disabled = true;  // Prevent unchecking the originally selected slot
+        }
+      });
+    });
+  </script>
+{% endblock %}

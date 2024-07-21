@@ -1,0 +1,18 @@
+<!-- customer/templates/facilityDetail.html -->
+
+{% extends "base.html" %}
+
+{% block title %}{{ facility.facilityName }} Details{% endblock %}
+
+{% block content %}
+  <h2>{{ facility.facilityName }}</h2>
+  <p><strong>Type:</strong> {{ facility.facilityType }}</p>
+  <p><strong>Description:</strong> {{ facility.facilityDescription }}</p>
+
+  <h3>Book a Slot</h3>
+  <form method="post" action="/facilities/{{facility.id}}/book">
+    {% csrf_token %}
+    <!-- Add booking form fields here -->
+    <button type="submit" class="btn btn-primary">Book Now</button>
+  </form>
+{% endblock %}

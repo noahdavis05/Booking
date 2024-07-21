@@ -1,0 +1,49 @@
+{% extends "business/base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>Welcome to {{ business.name }} Dashboard</h2>
+
+    <!-- This section provides buttons for navigation through the dashboard -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-start">
+                <button class="btn btn-primary mr-2" onclick="window.location.href='/facilities/new'">Make new Facility</button>
+                <button class="btn btn-primary mr-2">Button 2</button>
+                <button class="btn btn-primary mr-2">Button 3</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- This section shows the Businesses facilities and will take the business to each individually-->
+    <h3>Your facility groups</h3>
+    {% if facilities %}
+        <div class="row">
+            {% for facility in facilities %}
+                <div class="col-md-4">
+                    <a href="/facilities/{{ facility.id }}">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ facility.facilityName }}</h5>
+                                <p class="card-text">Type: {{ facility.facilityType }}</p>
+                                <p class="card-text">Description: {{ facility.facilityDescription }}</p>
+                                <p class="card-text">Id: {{ facility.id }}</p><br>
+                                <a href="/facility/group/delete/{{facility.id}}"><button class="btn btn-danger">Delete</button></a>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% if forloop.counter|divisibleby:3 %}
+                    </div><div class="row">
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No facilities found for this business.</p>
+    {% endif %}
+
+
+
+    <p>This is the landing page.</p>
+{% endblock %}

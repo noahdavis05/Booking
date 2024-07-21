@@ -1,0 +1,9 @@
+<!-- templates/email/confirmation_email.txt -->
+Dear {{ user.username }},
+
+Thank you for registering. Please click the link below to confirm your email address:
+
+{{ confirmation_link }}
+
+Best regards,
+Your Website Team

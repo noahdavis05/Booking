@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Booking Details</h2>
+  <p><a href="/business/dashboard" class="btn btn-secondary">Dashboard</a>
+  <a href="/facility/normal/bookings/{{ booking.sub_facility_id}}" class="btn btn-secondary">Back</a></p>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Booking ID: {{ booking.id }}</h5>
+      <p class="card-text">Customer Name: {{ booking.user.first_name }} {{booking.user.last_name}}</p>
+      <p class="card-text">Customer email: {{ booking.user.email }}</p>
+      <p class="card-text">Booking Date: {{ booking.date }}</p>
+      <p class="card-text">Start Time: {{ start_time }}</p>
+      <p class="card-text">End Time: {{ end_time }}</p>
+      <p class="card-text">Notes: {{ booking.booking_notes }}</p>
+      <p class="card-text">Paid: {{ booking.paid }}</p>
+      
+
+    </div>
+  </div><br>
+
+  <p><a href="/facility/normal/booking/edit/{{ booking.id }}" class="btn btn-primary">Edit Booking</a>
+  <a href="/facility/normal/booking/delete/{{ booking.id }}" class="btn btn-danger">Cancel Booking</a></p>
+
+{% endblock %}

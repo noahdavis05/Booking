@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+
+{% block title %}Account Activation{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Activate Your Account</h2>
+        <p>This email should be in your inbox, if not check spam!</p>
+        <p>Email sent to {{ email }}</p>
+
+        <!-- Activation Form -->
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button class="btn btn-primary" type="submit" name="activate">Activate</button>
+        </form>
+
+        <!-- Resend Activation Code Form -->
+        <form method="post">
+            {% csrf_token %}
+            <button class="btn btn-secondary" type="submit" name="resend_code">Resend Activation Code</button>
+        </form>
+
+        <!-- Back to Home Link -->
+        <a href="/business/dashboard" class="btn btn-info mt-3">Home</a>
+
+        <!-- Messages -->
+        {% if messages %}
+            <div class="alert alert-info mt-3">
+                <ul class="mb-0">
+                    {% for message in messages %}
+                        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

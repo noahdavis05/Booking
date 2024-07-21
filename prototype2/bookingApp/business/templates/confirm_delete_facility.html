@@ -1,0 +1,17 @@
+<!-- confirm_delete_facility.html -->
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Confirm Delete Facility{% endblock %}
+
+{% block content %}
+  <h2>Confirm Delete Facility</h2>
+  <p>Are you sure you want to delete the facility - Name: "{{ facility }}" Id: "{{facility.id}}"? This action cannot be undone.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit">Confirm Delete</button>
+    <a href="/business/dashboard">Cancel</a>
+  </form>
+{% endblock %}

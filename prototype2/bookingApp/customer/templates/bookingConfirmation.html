@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Home{% endblock %}
+
+{% block content %}
+  <h2>Welcome, {{ user.username }}!</h2>
+  <h3>Booking confirmation</h3>
+  <h3>Facility ID: {{ subfacility_id }}</h3>
+  <h3>Date: {{ selected_date }}</h3>
+  <h3>Time: {{ selected_time }}</h3>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirm Booking</button>
+  </form>
+
+  <h3>Other Information</h3>
+  <p>Additional content goes here.</p>
+{% endblock %}

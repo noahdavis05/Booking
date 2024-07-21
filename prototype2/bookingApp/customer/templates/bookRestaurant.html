@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Book {{ facility.facilityName }} {{ facility.facilityType }}</h2>
+
+  <h3>Choose Date</h3>
+  <form method="GET" id="dateForm" onsubmit="return redirectWithDate()">
+    <label for="date">Select a date:</label>
+    <input type="date" id="date" name="date" value="{{ selected_date }}"><br>
+    <input type="hidden" id="facilityId" value="{{ facility.id }}">
+    <label for="people">Number of people:</label>
+    <input type="number" id="people" name="people" min="1" max="12" value="{{ people }}"><br>
+    <input type="submit" value="Submit">
+  </form>
+
+  <h2>Date: {{ selected_date }}</h2>
+  <h2>Guests: {{ people }}</h2>
+  <h3>Available Sub-Facilities</h3>
+
+  <div class="row">
+    {% for sub_facility in sub_facilities %}
+      <div class="col-md-4">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">{{ sub_facility.name }}</h5>
+            <p class="card-text">{{ sub_facility.description }}</p>
+            <h6>Available Slots:</h6>
+            {% if length == 0 %}
+              <p>No available slots</p>
+            {% else %}
+              <form>
+                <label for="slot">Select a slot:</label>
+                <select name="slot" id="slot_{{ sub_facility.id }}">
+                  {% for key, value in slots.items %}
+                    {% if key == sub_facility.id %}
+                      {% for slot_time in value %}
+                        <option value="{{ slot_time }}">{{ slot_time }}</option>
+                      {% endfor %}
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                <input type="button" value="Book Slot" onclick="showResult('{{ sub_facility.id }}', 'slot_{{ sub_facility.id }}')">
+              </form>
+            {% endif %}
+            
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <script>
+    function redirectWithDate() {
+      const date = document.getElementById('date').value;
+      const people = document.getElementById('people').value;
+      const facilityId = document.getElementById('facilityId').value;
+      const url = `/restaurant/book/${facilityId}?date=${date}&people=${people}`;
+      window.location.href = url;
+      return false;
+    }
+
+    function showResult(subFacilityId, slotSelectId) {
+      
+      const selectedSlot = document.getElementById(slotSelectId).value;
+      const selectedDate = document.getElementById('date').value;
+      const people = document.getElementById('people').value;
+      const url = `/book/restaurant/${subFacilityId}/${selectedDate}/${selectedSlot}?people=${people}`;
+      window.location.href = url;
+    }
+  </script>
+{% endblock %}

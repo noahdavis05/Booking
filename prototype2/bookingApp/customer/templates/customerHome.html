@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Home{% endblock %}
+
+{% block content %}
+  <h2>Welcome, {{ user.username }}!</h2>
+  <p>This is your homepage. Here you can find your bookings, profile information, and more.</p>
+
+  <p><h3 style="display: inline-block;">Your Bookings</h3></p>
+  <p><button class="btn btn-primary" id="toggleBookingsButton" onclick="toggleBookings()" style="display: inline-block;">Show</button></p>
+    
+  
+  <!-- Example content: list of bookings -->
+  <div id="bookingsContainer" style="display: none;">
+    <p><button class="btn btn-secondary" id="togglePastBookingsButton" onclick="togglePastBookings()" style="display: inline-block;">Hide Past Bookings</button></p>
+      {% for booking in bookings %}
+        <div class="booking-wrapper">
+          <div class="card booking-card" data-booking-date="{{ booking.date }}">
+            <div class="card-body">
+              <h5 class="card-title">Booking Details</h5>
+              <a href="/business/{{ booking.sub_facility.facility.business.id }}/facilities"><p class="card-text">Business: {{ booking.sub_facility.facility.business }}</p></a>
+              <a href="/facilities/{{ booking.sub_facility.facility.id }}/book"<p class="card-text">Facility: {{ booking.sub_facility.facility }}</p></a>
+              <p class="card-text">Sub Facility: {{ booking.sub_facility.name }}</p>
+              <p class="card-text">Date: {{ booking.date }}</p>
+              <p class="card-text">Time: {{ booking.time }}</p>
+              <p class="card-text">Notes: {{ booking.booking_notes }}</p>
+              <p class="card-text">Booking reference: {{ booking.id }}</p>
+              <div class="button-container">
+                <a href="/bookings/{{ booking.id }}/edit"><button class="btn btn-success">Edit</button></a>
+                <a href="/delete/booking/{{ booking.id }}"<button class="btn btn-danger">Delete</button></a>
+              </div>
+            </div>
+          </div>
+          <br>
+        </div>
+      {% endfor %}
+  </div>
+
+  
+  <p><h3 style="display: inline-block;">Your Restaurant Reservations</h3></p>
+  <p><button class="btn btn-primary" id="toggleReservationsButton" onclick="toggleReservations()" style="display: inline-block;">Show</button></p>
+  
+
+  <div id="reservationsContainer" style="display: none;">
+      <!-- Example content: list of restaurant reservations -->
+      {% for reservation in restaurant_reservations %}
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Reservation Details</h5>
+            <p class="card-text">Restaurant: {{ reservation.restaurant_facility }}</p>
+            <p class="card-text">Date: {{ reservation.date }}</p>
+            <p class="card-text">Time: {{ reservation.time }}</p>
+            <p class="card-text">Number of People: {{ reservation.table_size }}</p>
+            <p class="card-text">Booking reference:  {{ reservation.id }}</p>
+
+          </div>
+        </div>
+        <br>
+      {% endfor %}
+  </div>
+
+  <h3>Your Profile</h3>
+  <!-- Example content: user profile information -->
+  <p>Name: {{ user.first_name }} {{ user.last_name }}</p>
+  <p>Email: {{ user.email }}</p>
+
+  <h3>Other Information</h3>
+  <p>Additional content goes here.</p>
+
+  <script>
+    function toggleBookings() {
+      var bookingsContainer = document.getElementById("bookingsContainer");
+      var toggleButton = document.getElementById("toggleBookingsButton");
+      
+      if (bookingsContainer.style.display === "none") {
+        bookingsContainer.style.display = "block";
+        toggleButton.innerHTML = "Hide";
+      } else {
+        bookingsContainer.style.display = "none";
+        toggleButton.innerHTML = "Show";
+      }
+    }
+
+    function toggleReservations() {
+      var reservationsContainer = document.getElementById("reservationsContainer");
+      var toggleButton = document.getElementById("toggleReservationsButton");
+      
+      if (reservationsContainer.style.display === "none") {
+        reservationsContainer.style.display = "block";
+        toggleButton.innerHTML = "Hide";
+      } else {
+        reservationsContainer.style.display = "none";
+        toggleButton.innerHTML = "Show";
+      }
+    }
+
+    function togglePastBookings() {
+      var toggleButton = document.getElementById("togglePastBookingsButton");
+      var today = new Date();
+      today.setHours(0, 0, 0, 0); // Set time to midnight to only compare dates
+      var bookingWrappers = document.querySelectorAll(".booking-wrapper");
+
+      bookingWrappers.forEach(function(wrapper) {
+        var card = wrapper.querySelector(".booking-card");
+        var bookingDate = new Date(card.getAttribute("data-booking-date"));
+        bookingDate.setHours(0, 0, 0, 0); // Set time to midnight to only compare dates
+
+        if (toggleButton.innerHTML === "Hide Past Bookings" && bookingDate < today) {
+          wrapper.style.display = "none"; // Hide past bookings
+        } else if (toggleButton.innerHTML === "Show Past Bookings") {
+          wrapper.style.display = "block"; // Show past bookings
+        }
+      });
+
+      // Toggle the button text for the next click
+      if (toggleButton.innerHTML === "Hide Past Bookings") {
+        toggleButton.innerHTML = "Show Past Bookings";
+      } else {
+        toggleButton.innerHTML = "Hide Past Bookings";
+      }
+    }
+  </script>
+{% endblock %}

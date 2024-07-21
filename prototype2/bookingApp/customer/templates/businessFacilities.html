@@ -1,0 +1,42 @@
+<!-- customer/templates/businessFacilities.html -->
+
+{% extends "base.html" %}
+
+{% block title %}{{ business.name }} Facilities{% endblock %}
+
+{% block content %}
+  <h2>Facilities at {{ business.name }}</h2>
+  
+  {% if facilities %}
+    <div class="row">
+      {% for facility in facilities %}
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">{{ facility.facilityName }}</h5>
+              <p class="card-text">Type: {{ facility.facilityType }}</p>
+              <p class="card-text">Description: {{ facility.facilityDescription }}</p>
+                <a href="/facilities/{{ facility.id }}/book">Book Now</a>
+            </div>
+          </div>
+        </div>
+        {% if forloop.counter|divisibleby:3 %}
+          </div><div class="row">
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No facilities found for this business.</p>
+  {% endif %}
+
+  <script>
+    function updateFormAction(facilityId) {
+      const dateInput = document.getElementById(`date-${facilityId}`);
+      const selectedDate = dateInput.value;
+      if (selectedDate) {
+        const form = document.getElementById(`booking-form-${facilityId}`);
+        form.action = `/facilities/${facilityId}/book/${selectedDate}`;
+      }
+    }
+  </script>
+{% endblock %}

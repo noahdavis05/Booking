@@ -1,0 +1,30 @@
+{% extends "business/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>Welcome to {{ business.name }} Dashboard</h2>
+
+    <!-- This section provides buttons for navigation through the dashboard -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-start">
+                <button class="btn btn-primary mr-2">Make new Facility</button>
+                <button class="btn btn-primary mr-2">Button 2</button>
+                <button class="btn btn-primary mr-2">Button 3</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- This section shows the Businesses facilities and will take the business to each individually-->
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy}}
+        <button type="submit">Create</button>
+    </form>
+
+
+
+    <p>This is the landing page.</p>
+{% endblock %}

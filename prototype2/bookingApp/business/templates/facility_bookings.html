@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Bookings for {{ facility.name }}</h2>
+  <p><a href="/business/dashboard" class="btn btn-primary">Back to Dashboard</a></p>
+  
+  <!-- Filter section -->
+  <div class="filter-section">
+    <p>
+      <label for="filter-date">Filter by Booking Date:</label>
+      <input type="date" id="filter-date" class="form-control">
+    </p>
+    <p>
+      <label for="filter-username">Filter by Username:</label>
+      <input type="text" id="filter-username" class="form-control" placeholder="Enter username">
+    </p>
+    <p><button id="filter-past-bookings" class="btn btn-primary">Toggle Past Bookings</button>
+    <button id="refresh-page" class="btn btn-primary" onclick="window.location.reload();">Refresh Page</button></p>
+  </div>
+
+  {% if bookings %}
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>Customer Name</th>
+          <th>Booking Date</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Notes</th>
+          <th>Paid</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="booking-table-body">
+        {% for booking in bookings %}
+          <tr class="booking-row" id="{{ booking.id }}">
+            <td>{{ booking.id }}</td>
+            <td>{{ booking.username }}</td>
+            <td>{{ booking.date }}</td>
+            <td>{{ booking.start_time }}</td>
+            <td>{{ booking.end_time }}</td>
+            <td>{{ booking.notes }}</td>
+            <td>{{ booking.paid }}</td>
+            <td>
+              <a href="/facility/normal/booking/view/{{ booking.id }}" class="btn btn-success btn-sm">View</a>
+              <a href="/facility/normal/booking/edit/{{ booking.id }}" class="btn btn-success btn-sm">Edit</a>
+              <a href="/facility/normal/booking/delete/{{ booking.id }}" class="btn btn-danger btn-sm">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No bookings found for this facility.</p>
+  {% endif %}
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const filterButton = document.getElementById("filter-past-bookings");
+      const filterDateInput = document.getElementById("filter-date");
+      const filterUsernameInput = document.getElementById("filter-username");
+      let showingPastBookings = true; // Track the state of past bookings visibility
+
+      filterButton.addEventListener("click", function() {
+        showingPastBookings = !showingPastBookings;
+        applyFilters();
+      });
+
+      filterDateInput.addEventListener("change", applyFilters);
+      filterUsernameInput.addEventListener("keyup", applyFilters);
+
+      function applyFilters() {
+        const today = new Date();
+        const selectedDate = filterDateInput.value ? new Date(filterDateInput.value) : null;
+        const username = filterUsernameInput.value.toLowerCase();
+        const rows = document.querySelectorAll(".booking-row");
+
+        rows.forEach(function(row) {
+          const bookingDate = new Date(row.children[2].textContent); // Assuming index 2 is the booking date column
+          const bookingUsername = row.children[1].textContent.toLowerCase(); // Assuming index 1 is the username column
+
+          const matchesDate = !selectedDate || isSameDay(bookingDate, selectedDate);
+          const matchesUsername = !username || bookingUsername.includes(username);
+          const isPastBooking = bookingDate < today && !isSameDay(bookingDate, today);
+
+          if (matchesDate && matchesUsername && (showingPastBookings || !isPastBooking)) {
+            row.style.display = ""; // Show bookings that match both filters and the toggle state
+          } else {
+            row.style.display = "none"; // Hide bookings that do not match both filters or the toggle state
+          }
+        });
+      }
+
+      function isSameDay(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+      }
+    });
+  </script>
+  
+{% endblock %}
