@@ -1,0 +1,49 @@
+{% extends "business/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>Create a new facility to book.</h2>
+
+    <!-- This section provides buttons for navigation through the dashboard -->
+
+
+    <!-- This section shows the Businesses facilities and will take the business to each individually-->
+    <form method="post" id="facilityForm">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+
+    
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        
+        const mondayOpen = document.getElementById('id_monday_open');
+        const mondayClose = document.getElementById('id_monday_close');
+        mondayOpen.addEventListener("change", autoFillTimes);
+        mondayClose.addEventListener("change", autoFillTimes);
+        
+        const days = ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+        function autoFillTimes() {
+            
+            days.forEach(day => {
+                const openField = document.getElementById(`id_${day}_open`);
+                const closeField = document.getElementById(`id_${day}_close`);
+                if (openField && closeField) {
+                    openField.value = mondayOpen.value;
+                    closeField.value = mondayClose.value;
+                }
+            });
+            console.log("Times updated based on Monday's values.");
+        }
+
+
+    });
+</script>
+{% endblock %}

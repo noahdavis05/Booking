@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Success{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-body text-center">
+            <h2 class="card-title text-success">Payment Successful!</h2>
+            <p class="card-text mt-4">Thank you for your payment. Your transaction was completed successfully.</p>
+            <p class="card-text">Booking ID: {{ booking_id }}</p>
+            <p class="card-text">Amount Paid: £{{ price }}</p>
+            {% if user.is_authenticated %}
+                <p class="card-text">You can view your bookings in your <a href="/customer/home">bookings</a> page.</p>
+            {% else %}
+                <a href="/business/{{booking.sub_facility.facility.business.id}}/facilities"<p>Back to booking page</p>
+            {% endif %}
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

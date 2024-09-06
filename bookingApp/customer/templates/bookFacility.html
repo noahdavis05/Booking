@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Book {{ facility.facilityName }} {{ facility.facilityType }}</h2>
+
+    <h3>Choose Date</h3>
+    <div class="form-group">
+      <label for="date">Select a date:</label>
+      <input type="date" id="date" name="date" value="{{ selected_date }}" class="form-control">
+      <input type="hidden" id="facilityId" value="{{ facility.id }}">
+    </div>
+
+    <h2>{{ selected_date }}</h2>
+
+    <h3>Available Sub-Facilities</h3>
+
+    <div class="row">
+      {% for sub_facility in sub_facilities %}
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div class="card-body">
+              <h5 class="card-title">{{ sub_facility.name }}</h5>
+              <p class="card-text">{{ sub_facility.description }}</p>
+              <h6>Available Slots:</h6>
+              <form>
+                <div class="form-group">
+                  <label for="slot">Select a slot:</label>
+                  <select name="slot" id="slot_{{ sub_facility.id }}" class="form-control">
+                    {% for key, value in slots.items %}
+                      {% if key == sub_facility.id %}
+                        {% for slot_time in value %}
+                          <option value="{{ slot_time }}">{{ slot_time }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    {% endfor %}
+                  </select>
+                </div>
+                <button type="button" class="btn btn-primary mb-2" onclick="showResult('{{ sub_facility.id }}', 'slot_{{ sub_facility.id }}')">Book single slot</button>
+                <button type="button" class="btn btn-secondary" onclick="showResultExtra('{{ sub_facility.id }}', 'slot_{{ sub_facility.id }}')">Book extra slot</button>
+                <p class="mt-2">Price: {{sub_facility.slot_price}}</p>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const dateInput = document.getElementById('date');
+      const facilityId = document.getElementById('facilityId').value;
+
+      dateInput.addEventListener('change', function() {
+        const date = dateInput.value;
+        const url = `/facilities/${facilityId}/book?date=${date}`;
+        window.location.href = url;
+      });
+    });
+
+    function showResult(subFacilityId, slotSelectId) {
+      const selectedSlot = document.getElementById(slotSelectId).value;
+      const selectedDate = document.getElementById('date').value;
+      const facilityId = document.getElementById('facilityId').value;
+
+      const url = `/book/${subFacilityId}/${selectedDate}/${selectedSlot}`;
+      window.location.href = url;
+    }
+
+    function showResultExtra(subFacilityId, slotSelectId) {
+      const selectedSlot = document.getElementById(slotSelectId).value;
+      const selectedDate = document.getElementById('date').value;
+      const facilityId = document.getElementById('facilityId').value;
+
+      const url = `/book/extra/${subFacilityId}/${selectedDate}/${selectedSlot}`;
+      window.location.href = url;
+    }
+  </script>
+{% endblock %}

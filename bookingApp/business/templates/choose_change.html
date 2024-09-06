@@ -1,0 +1,26 @@
+{% extends "business/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Make changes to your business account</h1><br>
+    
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3">
+                <a href="/update/business/details" class="btn btn-primary btn-lg btn-block">Change Business details</a>
+            </div>
+            <div class="col-md-3">
+                <a href="/update/business/change-password/" class="btn btn-primary btn-lg btn-block">Change account Password</a>
+            </div>
+            <div class="col-md-3">
+                <a href="/update/business/change-master-password" class="btn btn-primary btn-lg btn-block">Change Master Password</a>
+            </div>
+            <div class="col-md-3">
+                <a href="/update/business/change-email" class="btn btn-primary btn-lg btn-block">Change email</a>
+            </div>
+        </div>
+    </div>
+    </form>
+{% endblock %}

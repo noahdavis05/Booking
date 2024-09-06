@@ -1,0 +1,62 @@
+<!-- templates/customerProfile.html -->
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2>Profile</h2>
+    <div class="card mb-4">
+      <div class="card-header">
+        User Details
+      </div>
+      <div class="card-body">
+        <p><strong>Username:</strong> {{ request.user.username }}</p>
+        <p><strong>Email:</strong> {{ request.user.email }}</p>
+        <p><strong>First Name:</strong> {{ request.user.first_name }}</p>
+        <p><strong>Last Name:</strong> {{ request.user.last_name }}</p>
+        <p><strong>Phone Number:</strong> {{ request.user.customer.phone_number }}</p>
+        <p><strong>Address:</strong> {{ request.user.customer.address }}</p>
+        {% if request.user.business_link %}
+          <p><strong>Account Type:</strong> Business Account</p>
+        {% else %}
+          <p><strong>Account Type:</strong> Customer Account</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row">
+      {% if not request.user.business_link %}
+        <div class="col-md-4">
+          <h3>Update Profile</h3>
+          <form method="post">
+            {% csrf_token %}
+            {{ profile_form|crispy }}
+            <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+          </form>
+        </div>
+        <div class="col-md-4">
+          <h3>Update Email</h3>
+          <form method="post">
+            {% csrf_token %}
+            {{ email_form|crispy }}
+            <button type="submit" name="update_email" class="btn btn-primary">Update Email</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="col-md-8">
+          <div class="alert alert-info">
+            <strong>Note:</strong> Business accounts cannot change customer details. E.g. name, phone number, address.
+          </div>
+        </div>
+      {% endif %}
+      <div class="col-md-4">
+        <h3>Change Password</h3>
+        <form method="post" class="mt-4">
+          {% csrf_token %}
+          {{ password_form|crispy }}
+          <button type="submit" name="change_password" class="btn btn-primary">Change Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

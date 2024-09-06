@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <main class="container mt-4">
+        <section>
+            <h2 class="mb-4">Current Booking Systems</h2>
+            
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search for a business..." />
+            </div>
+
+            <div class="row" id="businessList">
+                {% if businesses %}
+                    {% for business in businesses %}
+                        <div class="col-md-4 mb-4 business-item" data-name="{{ business.name|lower }}">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h3 class="card-title">{{ business.name }}</h3>
+                                    <p class="card-text">{{ business.description }}</p>
+                                    <a href="/business/{{ business.id }}/facilities" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info" role="alert">
+                            No businesses available at the moment.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <!-- JavaScript for Real-Time Search -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const businessList = document.getElementById('businessList');
+            const businessItems = businessList.getElementsByClassName('business-item');
+
+            searchInput.addEventListener('input', function () {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                for (let i = 0; i < businessItems.length; i++) {
+                    const item = businessItems[i];
+                    const name = item.getAttribute('data-name');
+
+                    if (name.includes(searchTerm)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

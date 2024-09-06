@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Payment</h2>
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="amount">Amount:</label>
+            <input type="text" id="amount" name="amount" class="form-control" value="{{ amount }}" readonly>
+        </div>
+        <div id="card-element" class="form-group">
+            <!-- Stripe's Elements will create input fields here -->
+        </div>
+        <button id="submit" class="btn btn-primary btn-block mt-3">Pay</button>
+        <p id="error-message" class="text-danger mt-3"></p>
+    </form>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    var stripe = Stripe('{{ stripe_publishable_key }}');
+    var elements = stripe.elements();
+    var card = elements.create('card');
+    card.mount('#card-element');
+
+    var form = document.getElementById('payment-form');
+    var errorMessage = document.getElementById('error-message');
+
+    fetch(`/create-payment-intent/{{ booking_id }}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(function(response) {
+        return response.json();
+    }).then(function(paymentIntentResponse) {
+        if (paymentIntentResponse.error) {
+            errorMessage.textContent = paymentIntentResponse.error;
+        } else {
+            var clientSecret = paymentIntentResponse.clientSecret;
+            form.addEventListener('submit', function(ev) {
+                ev.preventDefault();
+                stripe.confirmCardPayment(clientSecret, {
+                    payment_method: {
+                        card: card
+                    }
+                }).then(function(result) {
+                    if (result.error) {
+                        errorMessage.textContent = result.error.message;
+                    } else {
+                        if (result.paymentIntent.status === 'succeeded') {
+                            errorMessage.textContent = 'Payment successful!';
+                            window.location.href = '/payment/success/{{ booking_id }}';
+                        }
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

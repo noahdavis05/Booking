@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Booking Confirmation{% endblock %}
+
+{% block content %}
+  <h1>Booking Confirmation</h1>
+  
+  {% if user.is_authenticated %}
+    <h2>Welcome, {{ user.username }}!</h2>
+  {% else %}
+    <h3>Please provide your details to continue as a guest</h3>
+    <p>Or <a href="/login/customer?next={{ request.path }}">log in</a> to your account.</p>
+  {% endif %}
+
+  <h4>Facility ID: {{ subfacility_id }}</h4>
+  <h4>Date: {{ selected_date }}</h4>
+  <h4>Time: {{ selected_time }}</h4>
+  <h4>Price: £{{ price }}</h4>
+
+  <form method="post" id="confirmation-form">
+    {% csrf_token %}
+    
+    {% if not user.is_authenticated %}
+      {{ form|crispy }}  <!-- Render guest form if user is not authenticated -->
+    {% endif %}
+    
+    {% if price == 0 %}
+      <button type="submit" class="btn btn-primary">Confirm Booking</button>
+    {% else %}
+      <button type="submit" class="btn btn-primary" id="submitButton">Continue To Payment</button>
+    {% endif %}
+  </form>
+
+  {% if price != 0 %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Payment</h2>
+        <p id="timer" class="text-center mb-4">You have 5 minutes to complete the payment</p>
+        <form id="payment-form">
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <input type="text" id="amount" name="amount" class="form-control" value="{{ price }}" readonly>
+            </div>
+            <div id="card-element" class="form-group">
+                <!-- Stripe's Elements will create input fields here -->
+            </div>
+            <button id="submit" class="btn btn-primary btn-block mt-3">Pay</button>
+            <p id="error-message" class="text-danger mt-3"></p>
+        </form>
+    </div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        var stripe = Stripe('{{ stripe_publishable_key }}');
+        var elements = stripe.elements();
+        var card = elements.create('card', {hidePostalCode: true});
+        card.mount('#card-element');
+
+        var form = document.getElementById('payment-form');
+        var errorMessage = document.getElementById('error-message');
+        var timerElement = document.getElementById('timer');
+        var bookingTimestamp = new Date('{{ booking_timestamp }}').getTime();
+        var expiryTime = bookingTimestamp + 5 * 60 * 1000; // 5 minutes from booking timestamp
+
+        function updateTimer() {
+            var now = new Date().getTime();
+            var timeLeft = Math.max((expiryTime - now) / 1000, 0);
+            var minutes = Math.floor(timeLeft / 60);
+            var seconds = Math.floor(timeLeft % 60);
+            timerElement.textContent = `You have ${minutes} minutes and ${seconds} seconds to complete the payment`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                errorMessage.textContent = 'Time expired. Your booking has been canceled.';
+                form.querySelector('button').disabled = true;
+                fetch('/cancel-booking/{{ booking_id }}/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                }).then(function() {
+                    window.location.href = '/booking/cancelled/'; // Redirect to a cancellation page
+                });
+            }
+        }
+
+        var timerInterval = setInterval(updateTimer, 1000);
+        updateTimer();  // Initial call to set the timer immediately
+    
+        document.getElementById('confirmation-form').addEventListener('submit', function(ev) {
+            ev.preventDefault();
+            var submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Booking...';
+        });
+
+        form.addEventListener('submit', function(ev) {
+            ev.preventDefault();
+            stripe.confirmCardPayment('{{ client_secret }}', {
+                payment_method: {
+                    card: card
+                }
+            }).then(function(result) {
+                if (result.error) {
+                    fetch('/confirm-payment/{{ booking_id }}/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    }).then(function(response) {
+                        return response.json();
+                    }).then(function(data) {
+                        if (data.success) {
+                            window.location.href = '/payment/success/{{ booking_id }}';
+                        } else {
+                            errorMessage.textContent = data.error || 'An error occurred while confirming the booking.';
+                        }
+                    });
+                } else {
+                    if (result.paymentIntent.status === 'succeeded') {
+                        fetch('/confirm-payment/{{ booking_id }}/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        }).then(function(response) {
+                            return response.json();
+                        }).then(function(data) {
+                            if (data.success) {
+                                window.location.href = '/payment/success/{{ booking_id }}';
+                            } else {
+                                errorMessage.textContent = 'An error occurred while confirming the booking.';
+                            }
+                        });
+                    } else {
+                        fetch('/confirm-payment/{{ booking_id }}/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            }
+                        }).then(function(response) {
+                            return response.json();
+                        }).then(function(data) {
+                            if (data.success) {
+                                window.location.href = '/payment/success/{{ booking_id }}';
+                            } else {
+                                errorMessage.textContent = data.error || 'An error occurred while confirming the booking.';
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Customer Home{% endblock %}
+
+{% block content %}
+  <h2 style="text-align: center;">Welcome, {{ user.first_name }} {{ user.last_name }} {{user.business_link.business.name}}!</h2>
+  <p style="text-align: center;">This is your homepage. Here you can find your bookings, profile information, and more.</p>
+
+  <!-- Section Toggle Navbar -->
+  <div class="section-navbar">
+    <a href="#" id="bookingsLink" class="active-link" onclick="showBookings()">Bookings</a>
+    <a href="#" id="companiesLink" class="inactive-link" onclick="showCompanies()">Browse Companies</a>
+  </div>
+
+  <!-- Bookings Section -->
+  <div id="bookingsContainer">
+    <!-- Filters for Bookings -->
+    <div class="bookings-filters">
+      <input type="text" id="companySearchInput" class="form-control" placeholder="Search for a company..." onkeyup="filterBookings()">
+      <input type="date" id="dateFilterInput" class="form-control" onchange="filterBookings()">
+      <div class="switch-container">
+        <label for="pastBookingsSwitch" class="switch-label">Show Past Bookings</label>
+        <input type="checkbox" id="pastBookingsSwitch" class="switch-input" onchange="togglePastBookings()">
+      </div>
+    </div>
+
+    {% for booking in bookings %}
+      <div class="booking-wrapper" data-booking-date="{{ booking.date }}" data-company-name="{{ booking.sub_facility.facility.business.name }}">
+        <div class="card booking-card">
+          <div class="card-body">
+            <h5 class="card-title">Booking Details</h5>
+            <a href="/business/{{ booking.sub_facility.facility.business.id }}/facilities"><p class="card-text">Business: {{ booking.sub_facility.facility.business }}</p></a>
+            <a href="/facilities/{{ booking.sub_facility.facility.id }}/book"><p class="card-text">Facility: {{ booking.sub_facility.facility }}</p></a>
+            <p class="card-text">Sub Facility: {{ booking.sub_facility.name }}</p>
+            <p class="card-text">Date: {{ booking.date }}</p>
+            <p class="card-text">Time: {{ booking.time }}</p>
+            <p class="card-text">Notes: {{ booking.booking_notes }}</p>
+            <p class="card-text">Booking reference: {{ booking.id }}</p>
+            <div class="button-container">
+              <a href="/bookings/{{ booking.id }}/edit"><button class="btn btn-success">Edit</button></a>
+              <a href="/delete/booking/{{ booking.id }}"><button class="btn btn-danger">Delete</button></a>
+            </div>
+          </div>
+        </div>
+        <br>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Companies Section -->
+  <div id="companiesContainer" style="display: none;">
+    <input type="text" id="companySearchInputCompanies" class="form-control" placeholder="Search for a company..." onkeyup="filterCompanies()"><br>
+    <div id="companiesList" class="company-list">
+      {% for company in companies %}
+        <div class="company-wrapper" data-company-name="{{ company.name }}">
+          <div class="card company-card">
+            <div class="card-body">
+              <h5 class="card-title">{{ company.name }}</h5>
+              <p class="card-text">{{ company.description }}</p>
+              <a href="/business/{{ company.id }}/facilities" class="btn btn-primary">View Facilities</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+
+
+  <style>
+    .section-navbar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      background-color: #f8f9fa;
+      padding: 10px 0;
+      border-radius: 5px;
+    }
+
+    .section-navbar a {
+      margin: 0 20px;
+      text-decoration: none;
+      font-size: 1.5rem;
+      color: gray;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: block;
+    }
+
+    .section-navbar a.active-link {
+      color: black;
+      background-color: #e9ecef;
+    }
+
+    .section-navbar a.inactive-link {
+      color: gray;
+    }
+
+    .section-navbar a:hover {
+      color: black;
+      background-color: #e9ecef;
+    }
+
+    .bookings-filters {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .bookings-filters .form-control {
+      margin-bottom: 10px;
+      width: 100%;
+      max-width: 500px; /* Full width */
+    }
+
+    .switch-container {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .switch-label {
+      margin-right: 10px;
+      font-size: 1rem;
+    }
+
+    .switch-input {
+      width: 34px;
+      height: 20px;
+      appearance: none;
+      background: #ddd;
+      cursor: pointer;
+      border-radius: 20px;
+      position: relative;
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    .switch-input:checked {
+      background: #4CAF50;
+    }
+
+    .switch-input:before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.2s;
+    }
+
+    .switch-input:checked:before {
+      transform: translateX(14px);
+    }
+
+    .company-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .company-wrapper {
+      flex: 1 1 calc(33.333% - 20px);
+      box-sizing: border-box;
+    }
+
+    .company-card, .booking-card {
+      padding: 15px;
+      width: 100%;
+    }
+
+    .company-wrapper.hidden, .booking-wrapper.hidden {
+      display: none;
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initial setup: hide past bookings
+        togglePastBookings(); 
+    });
+
+    function showBookings() {
+      document.getElementById("bookingsContainer").style.display = "block";
+      document.getElementById("companiesContainer").style.display = "none";
+      document.getElementById("bookingsLink").classList.add("active-link");
+      document.getElementById("companiesLink").classList.remove("active-link");
+    }
+
+    function showCompanies() {
+      document.getElementById("bookingsContainer").style.display = "none";
+      document.getElementById("companiesContainer").style.display = "block";
+      document.getElementById("bookingsLink").classList.remove("active-link");
+      document.getElementById("companiesLink").classList.add("active-link");
+    }
+
+    function togglePastBookings() {
+      var toggleSwitch = document.getElementById("pastBookingsSwitch");
+      var bookingWrappers = document.querySelectorAll(".booking-wrapper");
+      var today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize time to midnight
+
+      bookingWrappers.forEach(function(wrapper) {
+        var bookingDate = new Date(wrapper.getAttribute("data-booking-date"));
+        bookingDate.setHours(0, 0, 0, 0); // Normalize time to midnight
+
+        if (toggleSwitch.checked) {
+          // Show all bookings when the switch is on
+          wrapper.classList.remove("hidden");
+        } else {
+          // Hide past bookings when the switch is off
+          if (bookingDate < today) {
+            wrapper.classList.add("hidden");
+          } else {
+            wrapper.classList.remove("hidden");
+          }
+        }
+      });
+    }
+
+    function filterBookings() {
+      var companyFilter = document.getElementById("companySearchInput").value.toLowerCase();
+      var dateFilter = document.getElementById("dateFilterInput").value;
+      var previousDate = new Date(dateFilter);
+      previousDate.setDate(previousDate.getDate() - 1);
+      previousDate = previousDate.toISOString().slice(0, 10);
+      dateFilter = previousDate;
+      var bookingWrappers = document.querySelectorAll(".booking-wrapper");
+      var today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize time to midnight
+
+      bookingWrappers.forEach(function(wrapper) {
+        var companyName = wrapper.getAttribute("data-company-name").toLowerCase();
+        var bookingDate = new Date(wrapper.getAttribute("data-booking-date"));
+        bookingDate.setHours(0, 0, 0, 0); // Normalize time to midnight
+
+        var matchesCompany = companyName.includes(companyFilter);
+        var matchesDate = (dateFilter === "" || bookingDate.toISOString().slice(0, 10) === dateFilter);
+
+        if (matchesCompany && matchesDate && (document.getElementById("pastBookingsSwitch").checked || bookingDate >= today)) {
+          wrapper.classList.remove("hidden");
+        } else {
+          wrapper.classList.add("hidden");
+        }
+      });
+    }
+
+    function filterCompanies() {
+      var input = document.getElementById("companySearchInputCompanies");
+      var filter = input.value.toLowerCase();
+      var companyWrappers = document.querySelectorAll(".company-wrapper");
+
+      companyWrappers.forEach(function(wrapper) {
+        var companyName = wrapper.getAttribute("data-company-name").toLowerCase();
+        if (companyName.includes(filter)) {
+          wrapper.classList.remove("hidden");
+        } else {
+          wrapper.classList.add("hidden");
+        }
+      });
+    }
+
+    // Ensure togglePastBookings is called when the switch is changed
+    document.getElementById("pastBookingsSwitch").addEventListener("change", function() {
+      togglePastBookings();
+      filterBookings(); // Ensure the booking filter is reapplied after toggling the switch
+    });
+  </script>
+{% endblock %}

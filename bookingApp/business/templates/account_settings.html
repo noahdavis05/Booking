@@ -1,0 +1,62 @@
+<!-- account_settings.html -->
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+  <h2>Account Settings</h2>
+
+  <!-- Change Email Form -->
+  <div>
+    <h3>Change Email</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ email_form|crispy }}
+      <button type="submit" name="update_email" class="btn btn-primary">Update Email</button>
+    </form>
+  </div>
+
+  <!-- Change Master Password Form -->
+  <div>
+    <h3>Change Master Password</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ master_password_form|crispy }}
+      <button type="submit" name="update_master_password" class="btn btn-primary">Update Master Password</button>
+    </form>
+  </div>
+
+  <!-- Change Account Password Form -->
+  <div>
+    <h3>Change Account Password</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ account_password_form|crispy }}
+      <button type="submit" name="update_account_password" class="btn btn-primary">Update Account Password</button>
+    </form>
+  </div>
+
+  <!-- Update Business Details Form -->
+  <div>
+    <h3>Update Business Details</h3>
+    <form method="post">
+      {% csrf_token %}
+      {{ business_details_form|crispy }}
+      <button type="submit" name="update_business_details" class="btn btn-primary">Update Business Details</button>
+    </form>
+    {% if business_details_form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+        {% for field in business_details_form %}
+            {% for error in field.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in business_details_form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+  </div>
+
+{% endblock %}

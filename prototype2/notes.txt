@@ -1,8 +1,0 @@
-business 1 - username NoahDavis100 pass - Greenbrown3 businessPass - Greenbrown3 businessName - Noah LTD
-business 2 - username NoahDavis200 pass - Greenbrown3 businessPass - Greenbrown3 businessName - Noah LTD 200
-
-
-<!--<a href="{% url 'facility_detail' facility.id %}" class="btn btn-primary">View Details</a>-->
-
-
-

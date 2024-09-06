@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Booking Platform</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        /* Header styles */
+        header {
+            background: linear-gradient(45deg, #4B4BFF, #6E6EFF, #9A89FF);
+            position: relative;
+            z-index: 1;
+            padding-top: 10px; /* Reduced padding */
+            height: 100vh; /* Full viewport height */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content horizontally */
+        }
+        #gap{
+            height: 20%;
+        }
+
+        /* Navbar styles */
+        nav {
+            background-color: transparent;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 3;
+        }
+
+        .navbar-nav .nav-link {
+            color: white;
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: 2px solid white;
+            margin: 0 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-nav .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ddd;
+        }
+
+        .nav-item {
+            padding:  10px;
+        }
+
+        .navbar-toggler-icon {
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath stroke="rgba(255, 255, 255, 1)" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" d="M4 7h22M4 15h22M4 23h22"/%3E%3C/svg%3E');
+        }
+
+        /* Hero section styles */
+        #mainTitle {
+            text-align: center;
+        }
+
+        .container > h1, .container > p {
+            margin-bottom: 20px;
+        }
+
+        /* Custom Button Styling */
+        .btn-custom {
+            background-color: transparent;
+            color: white;
+            border-color: white;
+            transition: background-color 0.3s, color 0.3s;
+            text-decoration: none;
+            padding: 10px 25px; /* Reduced width */
+        }
+
+        
+
+        .btn-custom:hover {
+            background-color: white;
+            color: #6E6EFF;
+            text-decoration: none;
+        }
+
+        /* About Section Styles */
+        #content {
+            height: 100vh; /* Full height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            padding: 30px 15px;
+        }
+
+        #content h2 {
+            margin-bottom: 30px;
+        }
+
+        #content p {
+            margin-bottom: 20px;
+        }
+
+        .btn-test {
+            background-color: #9A89FF;
+            color: white;
+            padding: 10px 25px;
+            margin-top: 30px;
+            width: auto; /* Adjust width */
+        }
+
+        .btn-test:hover {
+            background-color: #6E6EFF;
+        }
+
+        /* Footer styles */
+        footer {
+            background-color: #6E6EFF;
+            color: white;
+            text-align: center;
+            padding: 1em 0;
+            margin-top: auto;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            header {
+                padding: 20px;
+                text-align: center;
+            }
+
+            #mainTitle h1 {
+                font-size: 2.5rem;
+            }
+
+            #mainTitle p {
+                font-size: 1.25rem;
+            }
+
+            /* Make sure sections do not overlap */
+            #content {
+                height: auto; /* Remove fixed height for small screens */
+                padding-top: 60px; /* Add padding to avoid overlap */
+            }
+
+            footer {
+                padding-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header class="jumbotron jumbotron-fluid text-center text-white">
+        <nav class="navbar navbar-expand-lg navbar-light bg-transparent">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+
+                    
+                        <li class="nav-item">
+                            <a class="btn btn-custom rounded-pill" href="/customer/home">Customers</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-custom rounded-pill" href="/business/dashboard">Businesses</a>
+                        </li>
+                    
+                </ul>
+            </div>
+        </nav>
+
+        <div id="gap"></div>
+
+        <!-- Hero Section -->
+        <div class="container text-center" id="mainTitle">
+            <h1 class="display-4">Slotly.</h1>
+            <p class="lead">A free simplistic solution for managing bookings and appointments.</p>
+
+        <div class="d-flex justify-content-center flex-wrap">
+            <a href="#content" class="btn btn-custom rounded-pill m-2" id="learnMoreBtn">Learn More</a>
+            <a href="/signup/business" class="btn btn-custom rounded-pill m-2">Get Started</a>
+            <a href="/view/businesses" class="btn btn-custom rounded-pill m-2">Book Now</a>
+        </div>
+        </div>
+    </header>
+
+    <!-- Main Content Section (Full Height for "About" Section) -->
+    <div class="container" id="content">
+        <div class="content-section">
+            <h2>About My Booking Platform</h2>
+            <p>
+                <strong>Simple but Effective Solution:</strong> Our platform offers a straightforward yet powerful way to manage bookings and appointments. It’s free to use for everyone, making it accessible to both businesses and individual users.
+            </p>
+            <p>
+                <strong>Flexible Booking Options:</strong> The system supports both paid and free bookings. Users can easily register online to make a booking, or they can book as guests without needing to create an account.
+            </p>
+            <p>
+                <strong>Business Dashboard:</strong> For businesses, our platform includes a user-friendly dashboard that allows you to check bookings, add new facilities for booking, edit existing facilities, and manage bookings with ease.
+            </p>
+            <p>
+                <strong>Guided Setup:</strong> To help you get started, there will be videos and documentation available on the site, guiding you through the setup and use of the platform.
+            </p>
+            <p>
+                <strong>Created by a Developer:</strong> This system is a personal coding project designed and developed by me. I would love for people to use it and provide feedback to help improve it further.
+            </p>
+            <a href="#tryItOut" class="btn btn-test rounded-pill">Test It Out</a>
+        </div>
+    </div>
+
+    <!-- Iframe Container (Try it Yourself Section) -->
+    <div class="container my-5" id="tryItOut">
+        <div class="row">
+            <div class="col">
+                <h2>Try it yourself!</h2>
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" src="https://noahcoding.pythonanywhere.com/facilities/1/book"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-white text-center py-4">
+        <p>&copy; 2024 Your Company. All rights reserved.</p>
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Smooth Scrolling Script -->
+    <script>
+        $(document).ready(function(){
+            $("a[href^='#']").click(function(event) {
+                event.preventDefault();
+                var target = this.hash;
+                var $target = $(target);
+
+                if ($target.length) {
+                    $('html, body').animate({
+                        scrollTop: $target.offset().top
+                    }, 800, function(){
+                        window.location.hash = target;
+                    });
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>
