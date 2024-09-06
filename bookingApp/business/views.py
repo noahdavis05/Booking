@@ -15,16 +15,19 @@ from django.contrib import messages
 from customer.forms import ActivationForm
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth import update_session_auth_hash
+
+
 """
-This is the view for my landing page
+View for landing page on my site.
 """
 @xframe_options_exempt
 def landing(request):
     return render(request, "landing.html", {})
 
 
+
 """
-View to create an account for a business
+View to create an account for a business.
 """
 def authViewBusiness(request):
     if request.method == "POST":
@@ -54,6 +57,9 @@ def authViewBusiness(request):
     return render(request, "signup.html", {"form": form})
 
 
+"""
+View to activate/verify the email of an account.
+"""
 @login_required_business
 def activate_account(request):
     form = ActivationForm()
@@ -190,7 +196,7 @@ def accessDenied(request):
 
 
 """
-Function to create a new facility
+View to create a new facility
 """
 @login_required_business
 def newFacility(request):
@@ -249,8 +255,7 @@ def facility_detail(request, facility_id):
         return redirect('/access_denied')  # Redirect to an access denied page if the user is linked to multiple businesses
     
     except Facility.DoesNotExist:
-        raise Http404("Facility not found")  # Facility does not exist
-        
+        raise Http404("Facility not found")  # Facility does not exist     
 
 
 """
@@ -302,8 +307,11 @@ def newSubFacility(request, facility_id):
     except Exception as e:
         print(e)  # Log the exception for debugging purposes
         return redirect('/access_denied')
-    
 
+
+"""
+View to delete a facility object (Can contain many sub Facilities).
+"""
 @login_required_business
 def deleteFacilityGroup(request, facility_id):
     try:
@@ -344,6 +352,9 @@ def deleteFacilityGroup(request, facility_id):
         raise Http404("An error occurred")
     
 
+"""
+View to delete a normalFacility (This is an actual facility which can be booked).
+"""
 @login_required_business
 def deleteNormalFacility(request, facility_id):
     try:
@@ -384,6 +395,9 @@ def deleteNormalFacility(request, facility_id):
         raise Http404("An error occurred")   
     
 
+"""
+View to edit a normalFacility. (This can include opening times, price, slot length, etc.)
+"""
 @login_required_business
 def editFacility(request, facility_id):
     
@@ -412,6 +426,9 @@ def editFacility(request, facility_id):
     return render(request, 'edit_facility.html', {'form': form, 'facility': normal_facility})
 
 
+"""
+View to delete a restaurant facility. NOTE - Not included in the final product.
+"""
 @login_required_business
 def deleteRestFacility(request, facility_id):
     business_link = request.user.business_link
@@ -445,6 +462,9 @@ def deleteRestFacility(request, facility_id):
     return render(request, 'confirm_delete_restaurant_facility.html', {'form': form, 'facility': restaurant_facility})
 
 
+"""
+View to edit a restaurantFacility. NOTE - Not included in the final product.
+"""
 @login_required_business
 def editRestFacility(request, facility_id):
     business_link = request.user.business_link
@@ -472,6 +492,9 @@ def editRestFacility(request, facility_id):
     return render(request, 'edit_restaurant_facility.html', {'form': form, 'facility': restaurant_facility})
 
 
+"""
+View to close a normalFacility for a day. This means no bookings for this day can be made.
+"""
 @login_required_business
 def closeFacility(request, facility_id):
     facility = get_object_or_404(NormalFacility, id=facility_id)
@@ -521,6 +544,10 @@ def closeFacility(request, facility_id):
         'closed_dates': closed_dates
     })
 
+
+"""
+View to reopen a normalFacility on a day where it has been closed.
+"""
 @login_required_business
 def openFacility(request, facility_id, selected_date):
     facility = get_object_or_404(NormalFacility, id=facility_id)
@@ -546,6 +573,9 @@ def openFacility(request, facility_id, selected_date):
     return render(request, 'confirm_reopen.html', {'facility': facility, 'closed_date': selected_date})
 
 
+"""
+View to show a business all the bookings for a selected normalFacility.
+"""
 @login_required_business
 def facilityBookings(request, facility_id):
     facility = get_object_or_404(NormalFacility, id=facility_id)
@@ -574,6 +604,10 @@ def facilityBookings(request, facility_id):
 
     return render(request, 'facility_bookings.html', {'facility': facility, 'bookings': booking_details})
 
+
+"""
+View to look at the details of a specific booking.
+"""
 @login_required_business
 def viewBooking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -594,6 +628,9 @@ def viewBooking(request, booking_id):
     })
 
 
+"""
+View to delete a booking.
+"""
 @login_required_business
 def deleteBooking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -609,11 +646,17 @@ def deleteBooking(request, booking_id):
     return render(request, 'delete_booking.html', {'booking': booking})
 
 
+"""
+View to edit booking. Redirects to another view in the customer app where the edit can be made.
+"""
 @login_required_business
 def editBooking(request, booking_id):
     return redirect('/bookings/' + str(booking_id) + '/edit')  # Adjust the redirect to your actual dashboard URL
 
 
+"""
+View for a page where user can enter their stripe keys to they can accpet payments. The secret key is encrypted in the database.
+"""
 @login_required_business
 def manage_stripe_keys(request):
     # Get the current user's business
@@ -640,6 +683,9 @@ def manage_stripe_keys(request):
     return render(request, 'manage_stripe_keys.html', {'form': form})
 
 
+"""
+View to change details of the business user's account. NOTE - This code doesn't work and is not used. The next views cover this.
+"""
 @login_required_business
 def account_settings(request):
     business = request.user.business_link.business
@@ -685,6 +731,9 @@ def account_settings(request):
     return render(request, 'account_settings.html', context)
 
 
+"""
+View to change the details of the business. E.g. Name, and description.
+"""
 @login_required_business
 def update_business_details(request):
     business = request.user.business_link.business
@@ -702,6 +751,10 @@ def update_business_details(request):
     }
     return render(request, 'update_business_details.html', context)
 
+
+"""
+View to change the accounts password to log in.
+"""
 @login_required_business
 def change_account_password(request):
     business = request.user.business_link.business
@@ -720,6 +773,10 @@ def change_account_password(request):
     }
     return render(request, 'change_account_password.html', context)
 
+
+"""
+View to change the accounts master password. Different to acount password. This password allows the user to make changes to the business.
+"""
 @login_required_business
 def change_master_password(request):
     business = request.user.business_link.business
@@ -737,6 +794,10 @@ def change_master_password(request):
     }
     return render(request, 'change_master_password1.html', context)
 
+
+"""
+View to change the accounts email adress.
+"""
 @login_required_business
 def change_email(request):
     business = request.user.business_link.business
@@ -755,6 +816,10 @@ def change_email(request):
     }
     return render(request, 'change_email.html', context)
 
+
+"""
+This is a view to a simple webpage which redirects the user to one of the previous 4 views to make changes to their account.
+"""
 @login_required_business
 def choose_change(request):
     return render(request, 'choose_change.html')
