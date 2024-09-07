@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect,  get_object_or_404
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomerSignupForm, CustomerLoginForm, BookingForm, BookingFormBusiness, ActivationForm,  CustomerProfileForm, CustomPasswordChangeForm, UpdateEmailForm, GuestBookingForm
 from django.contrib.auth.decorators import login_required
 from .models import Customer, Booking, RestaurantBooking, Payment
@@ -22,15 +21,14 @@ import stripe
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-import json
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 import time
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 
 
-# for emails
+"""
+A view which was just used to check if the email funcitonality was working. Can be used to check emails are still working.
+"""
 def test_email(request):
     subject = 'Test Email from Django'
     message = 'This is a test email sent from Django using Brevo SMTP.'
@@ -41,11 +39,17 @@ def test_email(request):
 
     return HttpResponse("Email sent successfully!")
 
-# sign up functions including emails
+
+"""
+A function to generate an activation code at random.
+"""
 def generate_activation_code(length=6):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
-# send the user the email to give them the activation code
+
+"""
+A function to send an activation code to the new user in an email.
+"""
 def send_activation_email(user):
     subject = 'Your Activation Code'
     message = f'Your activation code is {user.customer.activation_code}.'
@@ -53,7 +57,10 @@ def send_activation_email(user):
     recipient_list = [user.email]
     send_mail(subject, message, from_email, recipient_list)
 
-# view to verify the user
+
+"""
+A view which verifys the user's email adress, by checking the activation code the user recieved.
+"""
 @login_required_customer
 def activate_account(request):
     form = ActivationForm()
@@ -78,13 +85,15 @@ def activate_account(request):
             customer.save()
             send_activation_email(request.user)
             messages.success(request, 'A new activation code has been sent to your email.')
-
     else:
         form = ActivationForm()
 
     return render(request, 'activate_account.html', {'form': form, 'email': request.user.email})
 
-# sign up view
+
+"""
+View to let customers sign up. This creates a new user in the Django user model, and a new customer in my custom Customer model.
+"""
 def customer_signup(request):
     if request.method == 'POST':
         form = CustomerSignupForm(request.POST)
@@ -107,6 +116,10 @@ def customer_signup(request):
         form = CustomerSignupForm()
     return render(request, 'signup.html', {'form': form})
 
+
+"""
+View to let the customer login, on successful login they will be redirected to the home page or to a custom url if specified (Shown in the first line of the view.).
+"""
 def customer_login(request):
     # Check if there's a 'next' parameter in the request
     next_url = request.GET.get('next', '/customer/home')  # Default to '/customer/home' if 'next' is not provided
@@ -126,6 +139,10 @@ def customer_login(request):
 
     return render(request, 'myLogin.html', {'form': form, 'next': next_url})
 
+
+"""
+View to show the user their  homepage. Here the user can view their bookings and find new companies to book with.
+"""
 @login_required_customer
 def customer_home(request):
     try:
@@ -152,22 +169,28 @@ def customer_home(request):
     })
 
 
-
+"""
+View to show all the facilities a specified business has. This gives the user links to each of these facilities to book.
+"""
 def business_facilities(request, business_id):
     business = get_object_or_404(Business, id=business_id)
     facilities = Facility.objects.filter(business=business)
     return render(request, 'businessFacilities.html', {'business': business, 'facilities': facilities})
 
-#not used
+
+"""
+View to show a facilities details. This view is not used any more. These details are displayed in the above view
+"""
 def facility_detail_cust(request, facility_id):
     facility = get_object_or_404(Facility, id=facility_id)
     return render(request, 'facilityDetailCust.html', {'facility': facility})
 
 
-# login not required, anyone should be able to browse but must be logged in to book.
+
 """
 This is a view which gives the user's slots to book for a specific generic/sports facility.
 If they are trying to book a restaurant facility, they will be redirected to the restaurant booking page.
+Note restaurant facilities are not supported any more so there won't be any!
 """
 def book_facility(request, facility_id, selected_date=None):
     facility = get_object_or_404(Facility, id=facility_id)
@@ -188,9 +211,6 @@ def book_facility(request, facility_id, selected_date=None):
     else:
         selected_date = datetime.date.today()
 
-
-
-
     # Calculate available slots for each sub-facility
     slots = {}  # Dictionary to store available slots for each sub-facility
     for sub in sub_facilities:
@@ -199,30 +219,7 @@ def book_facility(request, facility_id, selected_date=None):
             slots[sub.id] = []
             continue
         # Get the day of the week for the selected date (0 = Monday, 6 = Sunday)
-        day_of_week = selected_date.weekday()
-
-        # Determine opening and closing times based on the day of the week
-        if day_of_week == 0:  # Monday
-            opening_time = sub.monday_open
-            closing_time = sub.monday_close
-        elif day_of_week == 1:  # Tuesday
-            opening_time = sub.tuesday_open
-            closing_time = sub.tuesday_close
-        elif day_of_week == 2:  # Wednesday
-            opening_time = sub.wednesday_open
-            closing_time = sub.wednesday_close
-        elif day_of_week == 3:  # Thursday
-            opening_time = sub.thursday_open
-            closing_time = sub.thursday_close
-        elif day_of_week == 4:  # Friday
-            opening_time = sub.friday_open
-            closing_time = sub.friday_close
-        elif day_of_week == 5:  # Saturday
-            opening_time = sub.saturday_open
-            closing_time = sub.saturday_close
-        elif day_of_week == 6:  # Sunday
-            opening_time = sub.sunday_open
-            closing_time = sub.sunday_close
+        opening_time, closing_time = get_opening_closing_times(selected_date, sub)
 
         # Calculate the available slots for the sub-facility on the given date
         existing_bookings = Booking.objects.filter(sub_facility=sub, date=selected_date)
@@ -232,44 +229,12 @@ def book_facility(request, facility_id, selected_date=None):
         slot_frequency = datetime.timedelta(minutes=sub.slot_frequency)
 
         while current_time < end_time:
-            print(current_time)
-            print(" ")
-            # Initialize the number of bookings at this slot
-    
-
             # iterate through each frequency interval of the current slot
-            slot_bookable = True
-            temp_time = current_time
-            while temp_time < current_time + datetime.timedelta(minutes=sub.slot_length):
-                clash_num = 0
-                for booking in existing_bookings:
-                    booking_start = datetime.datetime.combine(selected_date, booking.time)
-                    booking_end = booking_start + datetime.timedelta(minutes=sub.slot_length)
-                    if temp_time < booking_end and temp_time >= booking_start:
-                        clash_num += 1
-                
-                if clash_num >= sub.slot_quantity:
-                    slot_bookable = False
-                    break
-
-                temp_time += datetime.timedelta(minutes=sub.slot_frequency)
-
-            if slot_bookable:
+            if slot_available(sub, selected_date, current_time, existing_bookings):
                 slot_times.append(str(current_time.time()))
-                
-
-
-            
-
-            
-            
-            # Iterate through each existing booking
-
-            
+           
             # Move to the next slot time
             current_time += slot_frequency
-
-
 
         slots[sub.id] = slot_times
 
@@ -279,8 +244,11 @@ def book_facility(request, facility_id, selected_date=None):
         'slots': slots,
         'selected_date': selected_date.strftime('%Y-%m-%d')
     })
+
+
 """
 This view is for booking a restaurant facility. It will show the user the available slots for the restaurant facility.
+Note restaurant facilities are no longer used so not supported.
 """
 def book_restaurant(request, facility_id):
     facility = get_object_or_404(Facility, id=facility_id)
@@ -299,35 +267,12 @@ def book_restaurant(request, facility_id):
     else:
         selected_date = datetime.date.today()
 
-    # Get the day of the week (0 = Monday, 6 = Sunday)
-    day_of_week = selected_date.weekday()
-
     slots = {}
     for sub in sub_facilities:
         existing_bookings = RestaurantBooking.objects.filter(restaurant_facility=sub, date=selected_date, table_size=people)
         slot_times = []
 
-        if day_of_week == 0:
-            opening_time = sub.monday_open
-            closing_time = sub.monday_close
-        elif day_of_week == 1:
-            opening_time = sub.tuesday_open
-            closing_time = sub.tuesday_close
-        elif day_of_week == 2:
-            opening_time = sub.wednesday_open
-            closing_time = sub.wednesday_close
-        elif day_of_week == 3:
-            opening_time = sub.thursday_open
-            closing_time = sub.thursday_close
-        elif day_of_week == 4:
-            opening_time = sub.friday_open
-            closing_time = sub.friday_close
-        elif day_of_week == 5:
-            opening_time = sub.saturday_open
-            closing_time = sub.saturday_close
-        elif day_of_week == 6:
-            opening_time = sub.sunday_open
-            closing_time = sub.sunday_close
+        opening_time, closing_time = get_opening_closing_times(selected_date, sub)        
 
         current_time = datetime.datetime.combine(selected_date, opening_time)
         end_time = datetime.datetime.combine(selected_date, closing_time)
@@ -369,9 +314,9 @@ def book_restaurant(request, facility_id):
     })
 
 
-
-
-
+"""
+View to create the booking record, and take the user's payment for a singular slot.
+"""
 @csrf_exempt
 def booking_confirmation(request, subfacility_id, selected_date, selected_time):
     # Retrieve the sub-facility instance
@@ -394,16 +339,7 @@ def booking_confirmation(request, subfacility_id, selected_date, selected_time):
         raise Http404("Selected date is in the past")
 
     # Determine the opening and closing times based on the day of the week
-    day_of_week = selected_date.weekday()
-    opening_time, closing_time = {
-        0: (sub_facility.monday_open, sub_facility.monday_close),
-        1: (sub_facility.tuesday_open, sub_facility.tuesday_close),
-        2: (sub_facility.wednesday_open, sub_facility.wednesday_close),
-        3: (sub_facility.thursday_open, sub_facility.thursday_close),
-        4: (sub_facility.friday_open, sub_facility.friday_close),
-        5: (sub_facility.saturday_open, sub_facility.saturday_close),
-        6: (sub_facility.sunday_open, sub_facility.sunday_close),
-    }.get(day_of_week, (None, None))
+    opening_time, closing_time = get_opening_closing_times(selected_date, sub_facility)
 
     if not (opening_time <= selected_time <= closing_time):
         raise Http404("Selected time is outside of the facility's opening hours")
@@ -412,11 +348,14 @@ def booking_confirmation(request, subfacility_id, selected_date, selected_time):
         with transaction.atomic():
             # Lock existing bookings to avoid race conditions
             existing_bookings = Booking.objects.select_for_update().filter(
-                sub_facility=sub_facility, date=selected_date, time=selected_time
+                sub_facility=sub_facility, date=selected_date
             )
 
             # Check if the slot is fully booked
-            if existing_bookings.count() >= sub_facility.slot_quantity:
+            # make sure the variables are correct type
+            selected_time = datetime.datetime.combine(selected_date, selected_time)
+            #print(type(selected_time), type(selected_date))
+            if not slot_available(sub_facility, selected_date, selected_time, existing_bookings):
                 raise Http404("You were pipped to the post! Someone else has booked this slot")
 
             # Check if the user is logged in or not, if the user is not, continue as a guest
@@ -455,7 +394,6 @@ def booking_confirmation(request, subfacility_id, selected_date, selected_time):
                         'price': sub_facility.slot_price,
                         'form': form
                     })
-
             booking.save()
 
             # Check if the booking has been saved
@@ -512,9 +450,11 @@ def booking_confirmation(request, subfacility_id, selected_date, selected_time):
         'price': sub_facility.slot_price,
         'form': GuestBookingForm() if not request.user.is_authenticated else None
     })
-from collections import OrderedDict
 
 
+"""
+View to confirm and create booking records, as well as take the users payments. This is for bookings which accept multiple slots at once.
+"""
 def booking_confirmation_extra(request, subfacility_id, selected_date, selected_time):
     sub_facility = get_object_or_404(NormalFacility, id=subfacility_id)
 
@@ -535,16 +475,7 @@ def booking_confirmation_extra(request, subfacility_id, selected_date, selected_
         raise Http404("Sub-facility is closed on the selected date")
 
     # Map the day of the week to the corresponding opening and closing times
-    day_of_week = selected_date.weekday()
-    opening_time, closing_time = {
-        0: (sub_facility.monday_open, sub_facility.monday_close),
-        1: (sub_facility.tuesday_open, sub_facility.tuesday_close),
-        2: (sub_facility.wednesday_open, sub_facility.wednesday_close),
-        3: (sub_facility.thursday_open, sub_facility.thursday_close),
-        4: (sub_facility.friday_open, sub_facility.friday_close),
-        5: (sub_facility.saturday_open, sub_facility.saturday_close),
-        6: (sub_facility.sunday_open, sub_facility.sunday_close),
-    }.get(day_of_week, (None, None))
+    opening_time, closing_time = get_opening_closing_times(selected_date, sub_facility)
 
     # Validate that the selected time is within the opening hours
     if not (opening_time <= selected_time <= closing_time):
@@ -588,26 +519,8 @@ def booking_confirmation_extra(request, subfacility_id, selected_date, selected_
     slot_length = datetime.timedelta(minutes=sub_facility.slot_length)
 
     while current_time < end_time:
-        slot_bookable = True
-        temp_time = current_time
-        
-        while temp_time < current_time + slot_length:
-            clash_num = 0
-            for booking in existing_bookings:
-                booking_start = datetime.datetime.combine(selected_date, booking.time)
-                booking_end = booking_start + slot_length
-                if temp_time < booking_end and temp_time >= booking_start:
-                    clash_num += 1
-            
-            if clash_num >= sub_facility.slot_quantity:
-                slot_bookable = False
-                break
-
-            temp_time += slot_frequency
-
-        if slot_bookable:
+        if slot_available(sub_facility, selected_date, current_time, existing_bookings):
             available_slot_times.append(current_time.strftime('%H:%M'))
-
         current_time += slot_frequency
 
     # If the request method is POST, proceed to validate selected slots
@@ -631,8 +544,8 @@ def booking_confirmation_extra(request, subfacility_id, selected_date, selected_
             for date, time_str in slots_to_book:
                 time = datetime.datetime.strptime(time_str, '%H:%M').time()
                 existing_bookings = Booking.objects.select_for_update().filter(sub_facility=sub_facility, date=date, time=time)
-                if existing_bookings.count() >= sub_facility.slot_quantity:
-                    raise Http404("You were pipped to the post! Someone else has booked one of the selected slots")
+                if not slot_available(sub_facility, date, time, existing_bookings):
+                    raise Http404("You were pipped to the post! Someone else has booked this slot")
 
             total_price = sub_facility.slot_price * len(slots_to_book)
             if total_price == 0:
@@ -728,7 +641,9 @@ def booking_confirmation_extra(request, subfacility_id, selected_date, selected_
     })
 
 
-
+"""
+View to confirm and place restaurant bookings. NO longer supported.
+"""
 @login_required_customer
 def restaurant_booking_confirmation(request, restaurant_facility_id, selected_date, selected_time, people=1):
     sub_facility = get_object_or_404(RestaurantFacility, id=restaurant_facility_id)
@@ -752,28 +667,7 @@ def restaurant_booking_confirmation(request, restaurant_facility_id, selected_da
     slot_length = datetime.timedelta(minutes=sub_facility.slot_length)
 
     # Determine the opening and closing times for the selected day of the week
-    day_of_week = selected_date.weekday()
-    if day_of_week == 0:
-        opening_time = sub_facility.monday_open
-        closing_time = sub_facility.monday_close
-    elif day_of_week == 1:
-        opening_time = sub_facility.tuesday_open
-        closing_time = sub_facility.tuesday_close
-    elif day_of_week == 2:
-        opening_time = sub_facility.wednesday_open
-        closing_time = sub_facility.wednesday_close
-    elif day_of_week == 3:
-        opening_time = sub_facility.thursday_open
-        closing_time = sub_facility.thursday_close
-    elif day_of_week == 4:
-        opening_time = sub_facility.friday_open
-        closing_time = sub_facility.friday_close
-    elif day_of_week == 5:
-        opening_time = sub_facility.saturday_open
-        closing_time = sub_facility.saturday_close
-    elif day_of_week == 6:
-        opening_time = sub_facility.sunday_open
-        closing_time = sub_facility.sunday_close
+    opening_time, closing_time = get_opening_closing_times(selected_date, sub_facility)
 
     # Verify that the selected time is within the operational hours
     if not (opening_time <= selected_time < closing_time):
@@ -826,11 +720,17 @@ def restaurant_booking_confirmation(request, restaurant_facility_id, selected_da
     })
 
 
-
+"""
+View to show user that their booking was successful.
+"""
 @login_required_customer
 def booking_success(request):
     return render(request, 'bookingSuccess.html')
 
+
+"""
+View to allow user to delete their booking they made.
+"""
 @login_required_customer
 def delete_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id, user=request.user)
@@ -842,6 +742,9 @@ def delete_booking(request, booking_id):
     return render(request, 'delete_booking_confirmation.html', {'booking': booking})
 
 
+"""
+View which lets the user edit their booking. This lets them change the date or time (to any valid empty slot), and edit their booking notes.
+"""
 @login_required_customer
 def edit_booking(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -867,8 +770,8 @@ def edit_booking(request, booking_id):
     closed_dates = CloseNormalFacility.objects.filter(normal_facility=sub_facility)
     slots = []
     if not closed_dates.filter(date=selected_date).exists():
-        day_of_week = selected_date.weekday()
-        opening_time, closing_time = get_opening_closing_times(sub_facility, day_of_week)
+        
+        opening_time, closing_time = get_opening_closing_times(selected_date, sub_facility)
 
         # Calculate available slots for the sub-facility on the given date
         existing_bookings = Booking.objects.filter(sub_facility=sub_facility, date=selected_date)
@@ -878,13 +781,7 @@ def edit_booking(request, booking_id):
 
         while current_time < end_time:
             # Iterate through bookings to check for slot availability
-            bookings_at_slot = 0
-            for existing_booking in existing_bookings:
-                booking_start = datetime.datetime.combine(selected_date, existing_booking.time)
-                booking_end = booking_start + datetime.timedelta(minutes=sub_facility.slot_length)
-                if current_time < booking_end and (current_time + datetime.timedelta(minutes=sub_facility.slot_length)) > booking_start:
-                    bookings_at_slot += 1
-            if bookings_at_slot < sub_facility.slot_quantity:
+            if slot_available(sub_facility, selected_date, current_time, existing_bookings):
                 slots.append(str(current_time.time()))
             current_time += slot_frequency
 
@@ -895,29 +792,15 @@ def edit_booking(request, booking_id):
 
             # Convert new_date and new_time to datetime objects
             new_date_obj = parse_date(new_date)
-            new_time_obj = datetime.datetime.strptime(new_time, '%H:%M:%S').time()
+            new_time_obj = datetime.datetime.strptime(new_time, '%H:%M:%S')
 
             # Check if the new slot is still available
             existing_bookings = Booking.objects.filter(sub_facility=sub_facility, date=new_date_obj)
-            is_available = True
-            for existing_booking in existing_bookings:
-                booking_start = datetime.datetime.combine(new_date_obj, existing_booking.time)
-                booking_end = booking_start + datetime.timedelta(minutes=sub_facility.slot_length)
-                new_booking_start = datetime.datetime.combine(new_date_obj, new_time_obj)
-                new_booking_end = new_booking_start + datetime.timedelta(minutes=sub_facility.slot_length)
-                if new_booking_start < booking_end and new_booking_end > booking_start:
-                    is_available = False
-                    break
-
-            if is_available:
+            is_available = slot_available(sub_facility, new_date_obj, new_time_obj, existing_bookings)
+            if is_available:          
                 booking.date = new_date_obj
                 booking.time = new_time_obj
                 booking.save()
-
-                # Verify the booking details after saving
-                print(booking)
-                print(request.user)
-            else:
                 # Handle the case where the slot is no longer available
                 return render(request, 'edit_booking1.html', {
                     'booking': booking,
@@ -933,14 +816,11 @@ def edit_booking(request, booking_id):
             booking.booking_notes = new_notes
             booking.save()
 
-            print(booking)
-
         elif request.POST.get('type') == 'Confirm Status':
             temp = request.POST.get('paid') is not None  # Check if 'paid' checkbox is checked
             booking.paid = temp  # Update the booking's paid status
             booking.save()  # Save the booking with the new status
 
-            print(booking)
 
         else:
             print("Invalid action")
@@ -955,24 +835,10 @@ def edit_booking(request, booking_id):
         'selected_date': selected_date.strftime('%Y-%m-%d')
     })
 
-def get_opening_closing_times(sub_facility, day_of_week):
-    if day_of_week == 0:
-        return sub_facility.monday_open, sub_facility.monday_close
-    elif day_of_week == 1:
-        return sub_facility.tuesday_open, sub_facility.tuesday_close
-    elif day_of_week == 2:
-        return sub_facility.wednesday_open, sub_facility.wednesday_close
-    elif day_of_week == 3:
-        return sub_facility.thursday_open, sub_facility.thursday_close
-    elif day_of_week == 4:
-        return sub_facility.friday_open, sub_facility.friday_close
-    elif day_of_week == 5:
-        return sub_facility.saturday_open, sub_facility.saturday_close
-    elif day_of_week == 6:
-        return sub_facility.sunday_open, sub_facility.sunday_close
-    return None, None
 
-
+"""
+View to let the user edit their details, e.g. name, email, password.
+"""
 @login_required
 def customerProfile(request):
     customer = request.user.customer
@@ -1025,7 +891,9 @@ def customerProfile(request):
     })
 
 
-
+"""
+View to create payment intent. Not used.
+"""
 @login_required
 @csrf_exempt
 def create_payment_intent(request, booking_id):
@@ -1048,7 +916,9 @@ def create_payment_intent(request, booking_id):
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
-# function not used
+"""
+View to process payment, also not used.
+"""
 @login_required
 def payment(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -1060,6 +930,9 @@ def payment(request, booking_id):
     })
 
 
+"""
+View to show user when their payment has been accepted.
+"""
 def payment_success(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     if request.user:
@@ -1069,6 +942,10 @@ def payment_success(request, booking_id):
     return render(request, 'paymentSuccess.html', {'booking_id': booking_id, 'price': booking.payment.amount, 'user': user, 'booking': booking})
 
 
+"""
+View which handles payment. Where the api calls to stripe are made. A payment record gets added into database too.
+Payment is rechecked if it is not going through.
+"""
 @require_POST
 def confirm_payment(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
@@ -1169,8 +1046,9 @@ def confirm_payment(request, booking_id):
                 return JsonResponse({'error': str(e)}, status=400)
 
 
-
-
+"""
+View for when the booking being made has timed out or payment hasn't worked. Booking is deleted from database so slot can be booked again.
+"""
 @csrf_exempt
 def cancel_booking(request, booking_id):
     if request.method == 'POST':
@@ -1183,14 +1061,17 @@ def cancel_booking(request, booking_id):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+"""
+View to display to the user when the booking has been cancelled.
+"""
 def booking_cancelled(request):
     return render(request, 'bookingCancelled.html')
 
 
-
-
-
-
+"""
+A function to send a confirmation email to the user of the slots they just booked.
+"""
 def send_confirmation(booking_id):
     try:
         # Fetch the booking details using the booking_id
@@ -1226,7 +1107,66 @@ def send_confirmation(booking_id):
         print(f"An error occurred while sending the confirmation email: {str(e)}")
 
 
-
+"""
+View to display to anyone all businesses which can be booked from.
+"""
 def view_businesses(request):
     businesses = Business.objects.all()
     return render(request, 'viewBusinesses.html', {'businesses': businesses})
+
+
+"""
+Function used to get the opening and closing time of a given facility on a certain day of the week.
+"""
+def get_opening_closing_times(selected_date, sub):
+    day_of_week = selected_date.weekday()
+    if day_of_week == 0:
+        opening_time = sub.monday_open
+        closing_time = sub.monday_close
+    elif day_of_week == 1:
+        opening_time = sub.tuesday_open
+        closing_time = sub.tuesday_close
+    elif day_of_week == 2:
+        opening_time = sub.wednesday_open
+        closing_time = sub.wednesday_close
+    elif day_of_week == 3:
+        opening_time = sub.thursday_open
+        closing_time = sub.thursday_close
+    elif day_of_week == 4:
+        opening_time = sub.friday_open
+        closing_time = sub.friday_close
+    elif day_of_week == 5:
+        opening_time = sub.saturday_open
+        closing_time = sub.saturday_close
+    elif day_of_week == 6:
+        opening_time = sub.sunday_open
+        closing_time = sub.sunday_close
+
+    return opening_time, closing_time
+
+
+"""
+Function to see if a slot at a specific time at a facility is available to book.
+"""
+def slot_available(sub, selected_date, current_time, existing_bookings):
+    print(type(current_time), type(selected_date))
+    slot_bookable = True
+    temp_time = current_time
+    while temp_time < current_time + datetime.timedelta(minutes=sub.slot_length):
+        clash_num = 0
+        for booking in existing_bookings:
+            booking_start = datetime.datetime.combine(selected_date, booking.time)
+            booking_end = booking_start + datetime.timedelta(minutes=sub.slot_length)
+            if temp_time < booking_end and temp_time >= booking_start:
+                clash_num += 1
+        
+        if clash_num >= sub.slot_quantity:
+            slot_bookable = False
+            break
+
+        temp_time += datetime.timedelta(minutes=sub.slot_frequency)
+
+    if slot_bookable:
+        return True
+    else:
+        return False
