@@ -3,6 +3,12 @@ from functools import wraps
 from django.shortcuts import redirect
 from django.conf import settings
 
+"""
+These two functions are used similarly to @login_required.
+But means you can redirect to the user login and the business login pages, instead of only being able to redirect to one of them.
+"""
+
+
 def login_required_customer(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):

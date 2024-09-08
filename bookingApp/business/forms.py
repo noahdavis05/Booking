@@ -12,7 +12,7 @@ from crispy_forms.layout import Submit
 from crispy_forms.layout import Layout, Field, ButtonHolder, Submit
 from django.core.exceptions import ValidationError
 
-
+# Form to create a new account which will be linked to a business.
 class BusinessSignupForm(UserCreationForm):
     email = forms.EmailField(required=True)
 
@@ -35,11 +35,13 @@ class BusinessSignupForm(UserCreationForm):
             # Create a Business profile here if necessary
         return user
 
+# Form to login to a business account.
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=150)
     password = forms.CharField(widget=forms.PasswordInput)
 
-
+# Form to create a Business model which will link to the logged in account.
+# You can only have one business per account.
 class BusinessForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), label="Master Password")
     confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Confirm Master Password")
@@ -68,7 +70,8 @@ class BusinessForm(forms.ModelForm):
             business.save()
         return business
 
-
+# Form to make a new facility.
+# This facility will then have sub-facilities which can be booked by users.
 class FacilityForm(forms.ModelForm):
     business_password = forms.CharField(widget=forms.PasswordInput, required=True)
     facilityType = forms.ChoiceField(choices=[('Sports', 'Sports'),  ('Generic', 'Generic')])
@@ -89,7 +92,7 @@ class FacilityForm(forms.ModelForm):
             raise forms.ValidationError("Invalid business password.")
         return business_password
     
-
+# Form to make a NormalFacility instance. This can be booked by a user.
 class NormalFacilityForm(forms.ModelForm):
     business_password = forms.CharField(widget=forms.PasswordInput, required=True)
 
@@ -165,7 +168,8 @@ class NormalFacilityForm(forms.ModelForm):
         self.instance.additional_price = 0
         return super().save(commit=commit)
 
-
+# Form to make a restaurantFacility.
+# No longer supported.
 class RestaurantFacilityForm(forms.ModelForm):
     business_password = forms.CharField(widget=forms.PasswordInput, required=True)
 
@@ -200,15 +204,11 @@ class RestaurantFacilityForm(forms.ModelForm):
             raise forms.ValidationError("Invalid business password.")
         return business_password
     
-    
+# Form used to confirm deletion of a facility?   
 class ConfirmDeleteForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput, label="Confirm Password")
 
-
-
-
-
-    
+# Form to deny booking at a NormalFacility for a day.    
 class CloseNormalFacilityForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
@@ -226,6 +226,7 @@ class CloseNormalFacilityForm(forms.ModelForm):
             'class': 'form-control',
         })
 
+# Form to add stripe keys to database.
 class StripeKeyForm(forms.ModelForm):
     master_password = forms.CharField(
         widget=forms.PasswordInput(),
@@ -251,7 +252,7 @@ class StripeKeyForm(forms.ModelForm):
             raise forms.ValidationError("Incorrect master password.")
         return master_password
     
-
+# This was previously used by the next 4 forms, but is no longer.
 class MasterPasswordMixin(forms.Form):
     master_password = forms.CharField(widget=forms.PasswordInput(), label="Master Password")
 
@@ -270,7 +271,7 @@ class MasterPasswordMixin(forms.Form):
             raise forms.ValidationError("Incorrect master password.")
         return master_password
 
-
+# Form to change the email on your business account.
 class ChangeEmailForm(forms.ModelForm):
     confirm_email = forms.EmailField(required=True, label="Confirm New Email Address")
     master_password = forms.CharField(widget=forms.PasswordInput(), label="Master Password")
@@ -332,6 +333,7 @@ class ChangeEmailForm(forms.ModelForm):
         self.user.username = self.email
         self.user.save()
 
+# Form to change the master password of your Business.
 class ChangeMasterPasswordForm(forms.ModelForm):
     old_password = forms.CharField(widget=forms.PasswordInput(), label="Current Master Password")
     new_password = forms.CharField(widget=forms.PasswordInput(), label="New Master Password")
@@ -368,6 +370,7 @@ class ChangeMasterPasswordForm(forms.ModelForm):
             business.save()
         return business
 
+# Form to change the login password of your account.
 class ChangeAccountPasswordForm(forms.Form):
     master_password = forms.CharField(widget=forms.PasswordInput(), label="Master Password")
     new_password = forms.CharField(widget=forms.PasswordInput(), label="New Password")
@@ -407,7 +410,7 @@ class ChangeAccountPasswordForm(forms.Form):
             self.user.save()
         return self.user
 
-
+# Form to update the details of your business, e.g. name.
 class UpdateBusinessDetailsForm(forms.ModelForm):
     master_password = forms.CharField(
         widget=forms.PasswordInput(),
