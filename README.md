@@ -1,6 +1,6 @@
 # Django Booking App
 
-Welcome to my Django Booking App! This project has been in continuous development as I enhance its features and usability. It's designed to provide a seamless booking experience for businesses and their customers.
+Welcome to my Django Booking App! This project has been in continuous development as I enhance its features and usability. It's an app designed to allow any business or person to create a booking system easily and quickly, hosted on this site at no cost to them.
 
 ## Overview
 
