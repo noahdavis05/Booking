@@ -14,7 +14,7 @@ The Django Booking App allows businesses, companies, or individuals to create an
 - **Django Framework**: Core backend development.
 - **Stripe Integration**: For secure payment processing.
 - **Brevo**: Email service for confirmations and verification.
-- **PythonAnywhere Hosting**: Currently hosted at [noahcoding.pythonanywhere.com](http://noahcoding.pythonanywhere.com).
+- **PythonAnywhere Hosting**: Currently hosted at [noahcoding.pythonanywhere.com](http://noahcoding.pythonanywhere.com). Note if the site, doesn't load on the first try, or takes a while, sometimes the site takes a while to boot up if it hasn't been used recently.
 
 ## How to Use
 - **For Businesses:** Sign up, create your booking system, and manage your bookings through the business dashboard.
